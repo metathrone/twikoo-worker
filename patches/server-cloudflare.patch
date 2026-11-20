@@ -62,3 +62,31 @@ index f4f205e..f2fe258 100644
    setCustomLibs({
      // 保留 HTTP 邮件通道；常规 SMTP 使用请求内创建和关闭的真实 Nodemailer 连接。
      nodemailer: createCloudflareNodemailer(),
+
+diff --git a/packages/server-cloudflare/src/mail/nodemailer.ts b/packages/server-cloudflare/src/mail/nodemailer.ts
+--- a/packages/server-cloudflare/src/mail/nodemailer.ts
++++ b/packages/server-cloudflare/src/mail/nodemailer.ts
+@@ -92,11 +92,21 @@
+     headers.Authorization = `Bearer ${token}`;
+     headers.Accept = "application/json";
+   }
++  const parseAddress = (addr?: string): { email: string; name?: string } => {
++    const raw = String(addr ?? "").trim();
++    const m = raw.match(/^(?:"?([^"]*?)"?\s*)?<([^>]+)>$/);
++    if (m) {
++      const name = m[1].trim();
++      const email = m[2].trim();
++      return name ? { email, name } : { email };
++    }
++    return { email: raw };
++  };
+   const body = JSON.stringify(
+     service === "sendgrid" || service === "mailchannels"
+       ? {
+-          personalizations: [{ to: [{ email: mail.to }] }],
+-          from: { email: mail.from },
++          personalizations: [{ to: [parseAddress(mail.to)] }],
++          from: parseAddress(mail.from),
+           subject: mail.subject,
+           content: [{ type: "text/html", value: mail.html }],
+         }
