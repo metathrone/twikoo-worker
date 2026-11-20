@@ -1,0 +1,39 @@
+name: Sync and Deploy Twikoo Worker
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # 每天 UTC 03:00 自动检查上游更新并部署
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+
+      - name: Install pnpm
+        run: npm i -g pnpm
+
+      - name: Clone upstream Twikoo and build
+        run: |
+          git clone --depth 1 https://github.com/twikoojs/twikoo.git upstream
+          cd upstream
+          pnpm install --frozen-lockfile
+          pnpm -r --filter '@twikoojs/cloudflare...' build
+          mkdir -p ../dist
+          cp -r packages/server-cloudflare/dist/* ../dist/
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler deploy

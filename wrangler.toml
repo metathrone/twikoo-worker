@@ -1,0 +1,13 @@
+name = "twikoo"
+main = "dist/index.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "twikoo"
+database_id = "8a81fe04-e662-4d34-aa20-b1f61045fce3"
+
+routes = [
+  { pattern = "comment.rushia.eu.org", custom_domain = true }
+]
