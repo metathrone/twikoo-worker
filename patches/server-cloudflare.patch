@@ -15,10 +15,16 @@ index d7e2dbf..f0035d2 100644
 +  ...EdgeTmsModule,
 +};
 diff --git a/packages/server-cloudflare/src/main.ts b/packages/server-cloudflare/src/main.ts
-index f4f205e..d641246 100644
+index f4f205e..f2fe258 100644
 --- a/packages/server-cloudflare/src/main.ts
 +++ b/packages/server-cloudflare/src/main.ts
-@@ -31,8 +31,8 @@ export const cloudflareCapabilities: Capabilities = {
+@@ -1,3 +1,5 @@
++import { registerHandler, resolveHandler } from "@twikoojs/common";
++import { handleCommentDeleteWithCleanup } from "./r2-cleanup";
+ /**
+  * Cloudflare Workers 入口：转换平台载荷、注入适配器并管理请求内连接。
+  * 业务逻辑由 @twikoojs/common 处理；数据库、能力与部署配置见本包 README。
+@@ -31,8 +33,8 @@ export const cloudflareCapabilities: Capabilities = {
    mail: true,
    domPurify: true,
    ip2region: true,
@@ -29,3 +35,30 @@ index f4f205e..d641246 100644
    imageUpload: true,
    qqAvatar: true,
    ai: true,
+@@ -178,7 +180,26 @@ export function fromTkResponse(tkRes: TkResponse): Response {
+ }
+ 
+ /** 注入 HTTP 邮件兼容层、原生 FormData 与 request.cf 属地查询；其余库由公共层加载。 */
++let handlersHooked = false;
++function hookCommentDeleteHandlers(): void {
++  if (handlersHooked) return;
++  handlersHooked = true;
++  const adminHandler = resolveHandler("COMMENT_DELETE_FOR_ADMIN" as any);
++  if (adminHandler) {
++    registerHandler("COMMENT_DELETE_FOR_ADMIN" as any, (ctx) =>
++      handleCommentDeleteWithCleanup(ctx, adminHandler as any),
++    );
++  }
++  const userHandler = resolveHandler("COMMENT_DELETE_FOR_USER" as any);
++  if (userHandler) {
++    registerHandler("COMMENT_DELETE_FOR_USER" as any, (ctx) =>
++      handleCommentDeleteWithCleanup(ctx, userHandler as any),
++    );
++  }
++}
++
+ export function installCloudflareLibs(): void {
++  hookCommentDeleteHandlers();
+   setCustomLibs({
+     // 保留 HTTP 邮件通道；常规 SMTP 使用请求内创建和关闭的真实 Nodemailer 连接。
+     nodemailer: createCloudflareNodemailer(),
