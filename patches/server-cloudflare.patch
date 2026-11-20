@@ -1,0 +1,31 @@
+diff --git a/packages/server-cloudflare/src/lib-stubs.ts b/packages/server-cloudflare/src/lib-stubs.ts
+index d7e2dbf..f0035d2 100644
+--- a/packages/server-cloudflare/src/lib-stubs.ts
++++ b/packages/server-cloudflare/src/lib-stubs.ts
+@@ -1,2 +1,9 @@
+-/** 仅构建时替换已关闭或已覆写的依赖；不提供降级实现，误调用会在使用点失败。 */
+-export {};
++import { EdgeAkismetClient } from "./akismet";
++import { EdgeTmsModule } from "./tms";
++
++export const AkismetClient = EdgeAkismetClient;
++export const tms = EdgeTmsModule.tms;
++export default {
++  AkismetClient: EdgeAkismetClient,
++  ...EdgeTmsModule,
++};
+diff --git a/packages/server-cloudflare/src/main.ts b/packages/server-cloudflare/src/main.ts
+index f4f205e..d641246 100644
+--- a/packages/server-cloudflare/src/main.ts
++++ b/packages/server-cloudflare/src/main.ts
+@@ -31,8 +31,8 @@ export const cloudflareCapabilities: Capabilities = {
+   mail: true,
+   domPurify: true,
+   ip2region: true,
+-  akismet: false,
+-  tencentTms: false,
++  akismet: true,
++  tencentTms: true,
+   imageUpload: true,
+   qqAvatar: true,
+   ai: true,

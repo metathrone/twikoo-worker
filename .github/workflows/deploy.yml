@@ -26,6 +26,12 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/twikoojs/twikoo.git upstream
           cd upstream
+
+          # 应用 Akismet 与腾讯云内容安全 (TMS) 原生适配补丁
+          cp ../patches/akismet.ts packages/server-cloudflare/src/
+          cp ../patches/tms.ts packages/server-cloudflare/src/
+          git apply ../patches/server-cloudflare.patch
+
           pnpm install --frozen-lockfile
           pnpm -r --filter '@twikoojs/cloudflare...' build
           mkdir -p ../dist
