@@ -1,0 +1,9 @@
+{
+  "name": "twikoo-worker",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "cf": "^1.0.0-rc.6",
+    "wrangler": "^4.168.0"
+  }
+}
